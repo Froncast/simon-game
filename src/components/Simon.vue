@@ -77,9 +77,7 @@
         </svg>
       </div>
       <div class="game-right-side">
-        <p class="game__round">
-          Round: <span>{{ round }}</span>
-        </p>
+        <p class="game__round">Round: {{ round }}</p>
         <button
           @click="start"
           class="game__btn"
@@ -91,20 +89,15 @@
         <ul class="game-difficulty" v-if="!playGame">
           <p>Difficulty level:</p>
           <li class="game-difficulty__item">
-            <input type="radio" id="light" value="light" v-model="difficulty" />
+            <input type="radio" id="light" value="1500" v-model="difficulty" />
             <label for="light">Light</label>
           </li>
           <li class="game-difficulty__item">
-            <input
-              type="radio"
-              id="middle"
-              value="middle"
-              v-model="difficulty"
-            />
+            <input type="radio" id="middle" value="1000" v-model="difficulty" />
             <label for="middle">Middle</label>
           </li>
           <li class="game-difficulty__item">
-            <input type="radio" id="hard" value="hard" v-model="difficulty" />
+            <input type="radio" id="hard" value="400" v-model="difficulty" />
             <label for="hard">Hard</label>
           </li>
         </ul>
@@ -118,57 +111,51 @@ export default {
   name: "Simon",
   data() {
     return {
-      difficulty: "light",
+      difficulty: 1500,
       round: 0,
       sequence: [],
       playGame: false,
       playSeq: false,
-      count: 0,
+      counter: 0,
     };
-  },
-  computed: {
-    checkDifficulty() {
-      if (this.difficulty === "middle") return 1000;
-      if (this.difficulty === "hard") return 400;
-      return 1500;
-    },
   },
   methods: {
     start() {
       this.playGame = true;
-      this.getSequence();
-    },
-    getSequence() {
       this.round++;
+      console.log(this.playGame);
       this.sequence = Array.from({ length: this.round }, () =>
         Math.floor(Math.random() * (5 - 1))
       );
-      this.playSequence();
+      this.counter = 0;
+      this.show();
     },
-    playSequence() {
+    hide(i) {
+      const parts = this.getParts();
+      setTimeout(() => {
+        parts[i].classList.remove("simon__part--active");
+      }, 200);
+    },
+    show() {
       this.playSeq = true;
-      console.log(this.sequence);
-      const parts = document.querySelectorAll("image.simon__part");
-      let i = 0;
+      const parts = this.getParts();
 
-      const hide = (i) => {
-        setTimeout(() => {
-          parts[i].classList.remove("simon__part--active");
-        }, 200);
-      };
+      parts[this.sequence[this.counter]].classList.add("simon__part--active");
 
-      const show = () => {
-        parts[this.sequence[i]].classList.add("simon__part--active");
-        this.playSound(this.sequence[i]);
-        hide(this.sequence[i]);
-        i++;
-        if (i < this.sequence.length) {
-          setTimeout(show, this.checkDifficulty);
-        } else {
-          this.playSeq = false;
-        }
-      };
-      show();
+      this.playSound(this.sequence[this.counter]);
+
+      this.hide(this.sequence[this.counter]);
+
+      this.counter++;
+
+      if (this.counter < this.sequence.length) {
+        setTimeout(this.show, this.difficulty);
+      } else {
+        this.playSeq = false;
+      }
+    },
+    getParts() {
+      return document.querySelectorAll("image.simon__part");
     },
     playSound(i) {
       const audio = new Audio();
@@ -191,7 +178,7 @@ export default {
       } else if (this.sequence.length <= 0) {
         this.message("correctly");
         const timer = setTimeout(() => {
-          this.getSequence();
+          this.start();
           clearTimeout(timer);
         }, 1500);
       }
